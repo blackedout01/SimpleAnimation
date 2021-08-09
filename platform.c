@@ -1,9 +1,9 @@
 #define ArrayCount(X) (sizeof(X) / sizeof(*X))
 
-#include <stdio.h>
-
 typedef struct {
 	int Width, Height;
+	int MouseX, MouseY;
+	float DeltaTime;
 } context;
 
 void Setup();
@@ -27,17 +27,17 @@ char *ReadEntireFile(const char *Path) {
 }
 
 GLuint CompileShader(const char *VertexPath, const char *FragmentPath) {
-	GLint Success;
+	GLint Success0;
 
 	// NOTE: Compile vertex shader
 	char *VertexShader = ReadEntireFile(VertexPath);
 	GLuint VID = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(VID, 1, &VertexShader, 0);
+	glShaderSource(VID, 1, (const GLchar * const*)&VertexShader, 0);
 	glCompileShader(VID);
 	free(VertexShader);
 	
-	glGetShaderiv(VID, GL_COMPILE_STATUS, &Success);
-	if (Success == GL_FALSE) {
+	glGetShaderiv(VID, GL_COMPILE_STATUS, &Success0);
+	if (Success0 == GL_FALSE) {
 		GLchar Buf[1024] = {0};
 		GLsizei Length = 0;
 		glGetShaderInfoLog(VID, ArrayCount(Buf), &Length, Buf);
@@ -49,12 +49,12 @@ GLuint CompileShader(const char *VertexPath, const char *FragmentPath) {
 	// NOTE: Compile fragement shader
 	char *FragShader = ReadEntireFile(FragmentPath);
 	GLuint FID = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(FID, 1, &FragShader, 0);
+	glShaderSource(FID, 1, (const GLchar * const*)&FragShader, 0);
 	glCompileShader(FID);
 	free(FragShader);
 	
-	glGetShaderiv(FID, GL_COMPILE_STATUS, &Success);
-	if (Success == GL_FALSE) {
+	glGetShaderiv(FID, GL_COMPILE_STATUS, &Success0);
+	if (Success0 == GL_FALSE) {
 		GLchar Buf[1024] = {0};
 		GLsizei Length = 0;
 		glGetShaderInfoLog(FID, ArrayCount(Buf), &Length, Buf);
@@ -69,8 +69,8 @@ GLuint CompileShader(const char *VertexPath, const char *FragmentPath) {
 	glAttachShader(Program, FID);
 	glLinkProgram(Program);
 
-	glGetProgramiv(Program, GL_LINK_STATUS, &Success);
-	if (Success == GL_FALSE) {
+	glGetProgramiv(Program, GL_LINK_STATUS, &Success0);
+	if (Success0 == GL_FALSE) {
 		GLchar Buf[1024] = {0};
 		GLsizei Length = 0;
 		glGetProgramInfoLog(Program, ArrayCount(Buf), &Length, Buf);

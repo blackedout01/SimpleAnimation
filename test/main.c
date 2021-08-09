@@ -1,4 +1,4 @@
-#include "platform.c"
+#include "../platform.c"
 
 static GLuint ShaderProgram;
 static GLuint VAO;
@@ -12,7 +12,7 @@ void Setup() {
 		0, -1,
 		1, 0,
 		1, -1
-	};	
+	};
 
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
@@ -24,9 +24,7 @@ void Setup() {
 	glEnableVertexAttribArray(0);
 }
 
-void Draw(context *Context) {
-	glViewport(0, 0, Context->Width, Context->Height);
-	
+void Draw(context *Context) {	
 	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 

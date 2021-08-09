@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <windows.h>
 #include <GL/gl.h>
 #include <GL/glext.h>
@@ -198,7 +199,7 @@ INT WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, INT ShowC
 			TranslateMessage(&Message);
 			DispatchMessage(&Message);
 		}
-
+		glViewport(0, 0, Context.Width, Context.Height);
 		Draw(&Context);
 		
 		GLenum Error = glGetError();
