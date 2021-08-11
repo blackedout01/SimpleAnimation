@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <windows.h>
+#include <windowsx.h>
 #include <GL/gl.h>
 #include <GL/glext.h>
 #include <GL/wglext.h>
@@ -33,12 +34,22 @@ static PFNGLBUFFERDATAPROC glBufferData;
 static PFNGLBINDVERTEXARRAYPROC glBindVertexArray;
 
 static BOOL Running = TRUE;
+static context Context;
+
 LRESULT Wndproc(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
 {
 	switch(Message) {
 		case WM_CLOSE:
 		PostQuitMessage(0);
 		Running = FALSE;
+		break;
+		case WM_SIZE:
+		Context.Width = LOWORD(LParam);
+		Context.Height = HIWORD(LParam);
+		break;
+		case WM_MOUSEMOVE:
+		Context.MouseX = GET_X_LPARAM(LParam);
+		Context.MouseY = GET_Y_LPARAM(LParam);
 		break;
 		default:
 		break;
@@ -62,6 +73,7 @@ static void DebugCallback(GLenum Source, GLenum Type, GLuint Id, GLenum Severity
 	//OutputDebugString(Message);
 }
 #endif
+
 
 INT WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, INT ShowCmd) {
 	
@@ -95,11 +107,6 @@ INT WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, INT ShowC
 		Instance,		// HINSTANCE hInstance
 		0 				// LPVOID lpParam
 	);
-	
-	RECT Bounds = {0};
-	GetWindowRect(Window, &Bounds);
-	INT Width = Bounds.right - Bounds.left;
-	INT Height = Bounds.bottom - Bounds.top;
 	
 	HDC DeviceContext = GetDC(Window);
 	
@@ -138,7 +145,6 @@ INT WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, INT ShowC
 	BOOL Result = SetPixelFormat(DeviceContext, FormatIndex, &PixelFormat);
 	HGLRC RenderContext0 = wglCreateContext(DeviceContext);
 	wglMakeCurrent(DeviceContext, RenderContext0);
-	
 	
 	// https://www.opengl.org/archives/resources/features/OGLextensions/
 	// TODO: Check for NULL Result
@@ -188,9 +194,12 @@ INT WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, INT ShowC
 	//glEnable(GL_DEBUG_OUTPUT);
 	//glDebugMessageCallback(DebugCallback, 0);
 
-	context Context;
-	Context.Width = Width;
-	Context.Height = Height;
+	LARGE_INTEGER Freq;
+	LARGE_INTEGER LastTime;
+	LARGE_INTEGER Time;
+	// NOTE(blackedout01): Windows versions prior to XP not allowed.
+	QueryPerformanceFrequency(&Freq);
+	QueryPerformanceCounter(&LastTime);
 
 	Setup();
 	MSG Message;
@@ -200,6 +209,14 @@ INT WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, INT ShowC
 			DispatchMessage(&Message);
 		}
 		glViewport(0, 0, Context.Width, Context.Height);
+
+		QueryPerformanceCounter(&Time);
+		Context.DeltaTime = (Time.QuadPart - LastTime.QuadPart)/(float)Freq.QuadPart;
+		LastTime = Time;
+
+		char Buf[128] = {0};
+		sprintf(Buf, "DeltaTime: %f\n", Context.DeltaTime);
+		OutputDebugString(Buf);
 		Draw(&Context);
 		
 		GLenum Error = glGetError();
