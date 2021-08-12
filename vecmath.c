@@ -18,8 +18,27 @@ typedef union {
 	struct {
 		float X, Y, Z, W;
 	};
+	struct {
+		vec3 XYZ;
+		float Unsued0;
+	};
 	float E[4];
 } vec4;
+
+static vec3 Vec3(float X, float Y, float Z) {
+	vec3 Res = {X, Y, Z};
+	return Res;
+}
+
+static vec4 Vec4(float X, float Y, float Z, float W) {
+	vec4 Res = {X, Y, Z, W};
+	return Res;
+}
+
+static vec3 NegateVec3(vec3 In) {
+	vec3 Res = {-In.X, -In.Y, -In.Z};
+	return Res;
+}
 
 /* mat4 memory layout:
 |  0  1  2  3 |
@@ -38,6 +57,15 @@ static mat4 IdentityMat4 = {
 	0, 0, 1, 0,
 	0, 0, 0, 1,
 };
+
+static float SafeInv0(float Num) {
+	float Result;
+	if (Num == 0.0f)
+		Result = 0.0f;
+	else
+		Result = 1 / Num;
+	return Result;
+}
 
 static float Sin32(float Rad) {
 	return sinf(Rad);
@@ -76,7 +104,7 @@ static mat4 TransposeMat4(mat4 M) {
 }
 
 // Returns a matrix M such that M * P results in P + T for any point P.
-static mat4 TranslationMat4(vec4 T) {
+static mat4 TranslationMat4(vec3 T) {
 	mat4 R = {
 		1, 0, 0, T.X,
 		0, 1, 0, T.Y,
@@ -122,14 +150,41 @@ static mat4 RotationZMat4(float Rad) {
 	return R;
 }
 
-static mat4 ScaleMat4(vec4 S) {
+static mat4 ScaleMat4(vec3 S) {
 	mat4 R = {
 		S.X,   0,   0,   0,
 		  0, S.Y,   0,   0,
 		  0,   0, S.Z,   0,
-		  0,   0,   0, S.W,
+		  0,   0,   0,   1,
 	};
 	return R;
+}
+
+static mat4 InvScaleMat4(vec3 S) {
+	float SX = SafeInv0(S.X);
+	float SY = SafeInv0(S.Y);
+	float SZ = SafeInv0(S.Z);
+	mat4 R = {
+		SX,   0,   0,   0,
+		  0, SY,   0,   0,
+		  0,   0, SZ,   0,
+		  0,   0,   0,  1,
+	};
+	return R;
+}
+
+static mat4 TransformMat4(vec3 Position, mat4 Rotation, vec3 Scale) {
+	mat4 Result = ScaleMat4(Scale);
+	Result = MultMat4(Rotation, Result);
+	Result = MultMat4(TranslationMat4(Position), Result);
+	return Result;
+}
+
+static mat4 InvTransformMat4(vec3 Position, mat4 Rotation, vec3 Scale) {
+	mat4 Result = TranslationMat4(NegateVec3(Position));
+	Result = MultMat4(TransposeMat4(Rotation), Result);
+	Result = MultMat4(InvScaleMat4(Scale), Result);
+	return Result;
 }
 
 // Aspect is width over height

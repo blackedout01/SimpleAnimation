@@ -57,6 +57,8 @@ int main() {
 	Setup();
 	
 	uint64_t LastMicroTime = MicroTime();
+	uint64_t FirstMicroTime = MicroTime();
+	int Its = 0;
 	while(Running) {
 		while(XPending(Displ)) {
 			XNextEvent(Displ, &Event);
@@ -76,13 +78,13 @@ int main() {
 				Context.MouseY = Event.xmotion.y;
 				break;
 				case KeyPress:
-				Running = 0;
 				break;
 			}
 		}
-		
+		Its++;
 		uint64_t NewMicroTime = MicroTime();
 		Context.DeltaTime = (NewMicroTime - LastMicroTime)/1000000.0f;
+		printf("%f\n", (NewMicroTime - FirstMicroTime)/1000000.0f/Its);
 		LastMicroTime = NewMicroTime;
 
 		Draw(&Context);

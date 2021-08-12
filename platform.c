@@ -29,7 +29,10 @@ typedef struct {
 	int IndexCount, VertexCount;
 	vertex *Vertices;
 	int *Indices;
-} model;
+	GLuint VAO;
+	GLuint VBO;
+	GLuint IBO;
+} mesh;
 
 int CompareVertex(vertex A, vertex B) {
 	return A.Position.X == B.Position.X
@@ -121,7 +124,7 @@ static float ParseIntSeekEnd(char *Data, int *Index) {
 	return Result;
 }
 
-static model LoadOBJ(const char *Path) {
+static mesh LoadOBJ(const char *Path) {
 	char *Data = ReadEntireFile(Path);
 
 	// NOTE(blackedout01): Count
@@ -217,7 +220,7 @@ static model LoadOBJ(const char *Path) {
 
 	free(Data);
 
-	model Result = {0};
+	mesh Result = {0};
 	Result.IndexCount = 3*CountF;
 	Result.Indices = malloc(Result.IndexCount*sizeof(int));
 	int MaxVertexCount = Result.IndexCount;
@@ -243,7 +246,7 @@ static model LoadOBJ(const char *Path) {
 		label_ContinueOuter:;
 	}
 
-	realloc(Result.Vertices, Result.VertexCount*sizeof(vertex));
+	Result.Vertices = realloc(Result.Vertices, Result.VertexCount*sizeof(vertex));
 
 	free(AttribV);
 	free(AttribVT);
