@@ -1,7 +1,7 @@
 
 *.txt
 *.exe
-*.obj
+*/main.obj
 *.pdb
 *.ilk
 *.out
