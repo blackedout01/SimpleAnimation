@@ -4,7 +4,10 @@ typedef struct {
 	int Width, Height;
 	int MouseX, MouseY;
 	float DeltaTime;
-	int MouseDown;
+	int MouseDownLeft;
+	int MouseDownMiddle;
+	int MouseDownRight;
+	float ScrollDelta;
 } context;
 
 void Setup();

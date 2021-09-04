@@ -37,6 +37,7 @@ static PFNGLDEBUGMESSAGECALLBACKPROC glDebugMessageCallback;
 static PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
 static PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
 static PFNGLUNIFORM4FVPROC glUniform4fv;
+static PFNGLUNIFORM1IPROC glUniform1i;
 
 static BOOL Running = TRUE;
 static context Context;
@@ -191,6 +192,8 @@ INT WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, INT ShowC
 	glUniformMatrix4fv = (PFNGLUNIFORMMATRIX4FVPROC)wglGetProcAddress("glUniformMatrix4fv");
 	glDebugMessageCallback = (PFNGLDEBUGMESSAGECALLBACKPROC)wglGetProcAddress("glDebugMessageCallback");
 	glUniform4fv = (PFNGLUNIFORM4FVPROC)wglGetProcAddress("glUniform4fv");
+	glUniform1i = (PFNGLUNIFORM1IPROC)wglGetProcAddress("glUniform1i");
+
 	
 	wglMakeCurrent(0, 0);
 	wglDeleteContext(RenderContext0);

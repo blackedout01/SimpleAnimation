@@ -7,6 +7,7 @@ static GLint LocMatModel;
 static GLint LocLightDir;
 static GLint LocModelColor;
 static GLint LocShadowCubes;
+static GLint LocShadowCubeCount;
 
 static mesh CubeMesh;
 
@@ -81,6 +82,7 @@ void Setup() {
 	LocLightDir = glGetUniformLocation(ShaderProgram, "LightDir");
 	LocModelColor = glGetUniformLocation(ShaderProgram, "ModelColor"); 
 	LocShadowCubes = glGetUniformLocation(ShaderProgram, "ShadowCubes");
+	LocShadowCubeCount = glGetUniformLocation(ShaderProgram, "ShadowCubeCount");
 }
 
 static float Accu = 0.0f;
@@ -94,10 +96,13 @@ static float V = 0.0f;
 static int LastMouseX = 0;
 static int LastMouseY = 0;
 
+static float Zoom = 30;
+
 void Draw(context *Context) {
 	float Aspect = Context->Width/(float)Context->Height;
 	mat4 MatProj = ProjectionMatrix(1.0f, Aspect, 0.1f, 1000.0f);
-	vec3 T = {0, 0, -3.0f};
+	Zoom *= 1 + Context->ScrollDelta/10;
+	vec3 T = {0, 0, -Zoom};
 	
 
 	float MouseDX = (float)(Context->MouseX - LastMouseX);
@@ -105,7 +110,7 @@ void Draw(context *Context) {
 	LastMouseX = Context->MouseX;
 	LastMouseY = Context->MouseY;
 
-	if(Context->MouseDown) {
+	if(Context->MouseDownLeft) {
 		H += MouseDX*0.01f;
 		V += MouseDY*0.01f;
 		glDisable(GL_MULTISAMPLE);
@@ -141,6 +146,7 @@ void Draw(context *Context) {
 	glUniformMatrix4fv(LocMatProj, 1, GL_TRUE, MatProj.E);
 	glUniformMatrix4fv(LocMatView, 1, GL_TRUE, MatView.E);
 	glUniformMatrix4fv(LocShadowCubes, ShadowCubeCount, GL_TRUE, (float *)ShadowCubes);
+	glUniform1i(LocShadowCubeCount, ShadowCubeCount);
 	
 	for(int I = 0; I < ShadowCubeCount; ++I) {
 		DrawModel(&Cubes[I]);

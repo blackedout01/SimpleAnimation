@@ -14,7 +14,7 @@ static uint64_t MicroTime() {
 }
 
 int main() {
-	context Context;
+	context Context = {0};
 	Display *Displ;
 	Window Win;
 	GLXContext RenderContext;
@@ -42,7 +42,7 @@ int main() {
 	VisualInfo = glXChooseVisual(Displ, 0, Attribs);
 	Cmap = XCreateColormap(Displ, RootWindow(Displ, Screen), VisualInfo->visual, AllocNone);
 	SetWinAttribs.colormap = Cmap;
-	SetWinAttribs.event_mask = ExposureMask | KeyPressMask | PointerMotionMask;
+	SetWinAttribs.event_mask = ExposureMask | KeyPressMask | PointerMotionMask | ButtonPressMask | ButtonReleaseMask;
 	Win = XCreateWindow(Displ, RootWindow(Displ, Screen), 0, 0, 1440, 900,
 		0, VisualInfo->depth, InputOutput, VisualInfo->visual,
 		CWColormap | CWEventMask, &SetWinAttribs);
@@ -77,6 +77,38 @@ int main() {
 				Context.MouseX = Event.xmotion.x;
 				Context.MouseY = Event.xmotion.y;
 				break;
+				case ButtonPress:
+				switch(Event.xbutton.button) {
+					case Button1:
+					Context.MouseDownLeft = 1;
+					break;
+					case Button2:
+					Context.MouseDownMiddle = 1;
+					break;
+					case Button3:
+					Context.MouseDownRight = 1;
+					break;
+					case Button4:
+					Context.ScrollDelta -= 1.0f;
+					break;
+					case Button5:
+					Context.ScrollDelta += 1.0f;
+					break;
+				}
+				break;
+				case ButtonRelease:
+				switch(Event.xbutton.button) {
+					case Button1:
+					Context.MouseDownLeft = 0;
+					break;
+					case Button2:
+					Context.MouseDownMiddle = 0;
+					break;
+					case Button3:
+					Context.MouseDownRight = 0;
+					break;
+				}
+				break;
 				case KeyPress:
 				break;
 			}
@@ -84,10 +116,13 @@ int main() {
 		Its++;
 		uint64_t NewMicroTime = MicroTime();
 		Context.DeltaTime = (NewMicroTime - LastMicroTime)/1000000.0f;
-		printf("%f\n", (NewMicroTime - FirstMicroTime)/1000000.0f/Its);
+		// Print time per frame:
+		// printf("%f\n", (NewMicroTime - FirstMicroTime)/1000000.0f/Its);
 		LastMicroTime = NewMicroTime;
 
 		Draw(&Context);
+
+		Context.ScrollDelta = 0.0f;
 
 		glXSwapBuffers(Displ, Win);
 	}
