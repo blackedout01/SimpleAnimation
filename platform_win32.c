@@ -58,10 +58,25 @@ LRESULT Wndproc(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
 		Context.MouseY = GET_Y_LPARAM(LParam);
 		break;
 		case WM_LBUTTONDOWN:
-		Context.MouseDown = 1;
+		Context.MouseDownLeft = 1;
 		break;
 		case WM_LBUTTONUP:
-		Context.MouseDown = 0;
+		Context.MouseDownLeft = 0;
+		break;
+		case WM_MBUTTONDOWN:
+		Context.MouseDownMiddle = 1;
+		break;
+		case WM_MBUTTONUP:
+		Context.MouseDownMiddle = 0;
+		break;
+		case WM_RBUTTONDOWN:
+		Context.MouseDownRight = 1;
+		break;
+		case WM_RBUTTONUP:
+		Context.MouseDownRight = 0;
+		break;
+		case WM_MOUSEWHEEL:
+		Context.ScrollDelta -= GET_WHEEL_DELTA_WPARAM(WParam) / 120.0f;
 		break;
 		default:
 		break;
@@ -315,6 +330,8 @@ INT WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, INT ShowC
 		//sprintf(Buf, "DeltaTime: %f\n", Context.DeltaTime);
 		//OutputDebugString(Buf);
 		Draw(&Context);
+		
+		Context.ScrollDelta = 0.0f;
 		
 		#if 0
 		GLenum Error = glGetError();

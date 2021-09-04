@@ -19,7 +19,7 @@ typedef struct {
 } model;
 
 static model Ground;
-#define ShadowCubeCount (128)
+#define ShadowCubeCount (16)
 static model Cubes[ShadowCubeCount];
 
 void DrawModel(model *Model) {
@@ -113,10 +113,6 @@ void Draw(context *Context) {
 	if(Context->MouseDownLeft) {
 		H += MouseDX*0.01f;
 		V += MouseDY*0.01f;
-		glDisable(GL_MULTISAMPLE);
-	}
-	else {
-		glEnable(GL_MULTISAMPLE);
 	}
 	mat4 MatView = IdentityMat4;
 	MatView = MultMat4(RotationYMat4(H), MatView);
