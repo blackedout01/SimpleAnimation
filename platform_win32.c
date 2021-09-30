@@ -38,6 +38,8 @@ static PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
 static PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
 static PFNGLUNIFORM4FVPROC glUniform4fv;
 static PFNGLUNIFORM1IPROC glUniform1i;
+static PFNGLMAPBUFFERPROC glMapBuffer;
+static PFNGLUNMAPBUFFERPROC glUnmapBuffer;
 
 static BOOL Running = TRUE;
 static context Context;
@@ -111,7 +113,7 @@ INT WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, INT ShowC
 		0,			// int       cbWndExtra;
 		Instance,	// HINSTANCE hInstance;
 		0,			// HICON     hIcon;
-		0,			// HCURSOR   hCursor;
+		LoadCursor(0, IDC_ARROW), // HCURSOR   hCursor;
 		0,			// HBRUSH    hbrBackground;
 		0,			// LPCSTR    lpszMenuName;
 		ClassName	// LPCSTR    lpszClassName;
@@ -208,6 +210,8 @@ INT WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, INT ShowC
 	glDebugMessageCallback = (PFNGLDEBUGMESSAGECALLBACKPROC)wglGetProcAddress("glDebugMessageCallback");
 	glUniform4fv = (PFNGLUNIFORM4FVPROC)wglGetProcAddress("glUniform4fv");
 	glUniform1i = (PFNGLUNIFORM1IPROC)wglGetProcAddress("glUniform1i");
+	glMapBuffer = (PFNGLMAPBUFFERPROC)wglGetProcAddress("glMapBuffer");
+	glUnmapBuffer = (PFNGLUNMAPBUFFERPROC)wglGetProcAddress("glUnmapBuffer");
 
 	
 	wglMakeCurrent(0, 0);

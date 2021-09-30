@@ -1,5 +1,38 @@
 #include <math.h>
 
+static float Sin32(float Rad) {
+	return sinf(Rad);
+}
+
+static float Cos32(float Rad) {
+	return cosf(Rad);
+}
+
+static float Tan32(float Rad) {
+	return tanf(Rad);
+}
+
+static float Sqrt32(float R) {
+	return sqrtf(R);
+}
+
+static float Atan232(float Y, float X) {
+	return atan2f(Y, X);
+}
+
+static float Cbrt32(float R) {
+	return cbrtf(R);
+}
+
+static float SafeInv0(float Num) {
+	float Result;
+	if (Num == 0.0f)
+		Result = 0.0f;
+	else
+		Result = 1 / Num;
+	return Result;
+}
+
 typedef union {
 	struct {
 		float X, Y;
@@ -91,6 +124,22 @@ static vec3 CrossVec3(vec3 A, vec3 B) {
 	return R;
 }
 
+/* mat3 memory layout:
+| 0 1 2 |
+| 3 4 5 |
+| 6 7 8 |
+*/
+
+typedef struct {
+	float E[9];
+} mat3;
+
+static mat3 IdentityMat3 = {
+	1, 0, 0,
+	0, 1, 0,
+	0, 0, 1,
+};
+
 /* mat4 memory layout:
 |  0  1  2  3 |
 |  4  5  6  7 |
@@ -109,27 +158,6 @@ static mat4 IdentityMat4 = {
 	0, 0, 0, 1,
 };
 
-static float SafeInv0(float Num) {
-	float Result;
-	if (Num == 0.0f)
-		Result = 0.0f;
-	else
-		Result = 1 / Num;
-	return Result;
-}
-
-static float Sin32(float Rad) {
-	return sinf(Rad);
-}
-
-static float Cos32(float Rad) {
-	return cosf(Rad);
-}
-
-static float Tan32(float Rad) {
-	return tanf(Rad);
-}
-
 // Returns A * B
 static mat4 MultMat4(mat4 A, mat4 B) {
 	mat4 R = {0};
@@ -146,15 +174,15 @@ static mat4 MultMat4(mat4 A, mat4 B) {
 
 static vec3 MultMat4Vec3(mat4 M, vec3 V) {
 	vec3 R = {
-		M.E[0]*V.X + M.E[1]*V.Z + M.E[2]*V.Z,
-		M.E[4]*V.X + M.E[5]*V.Z + M.E[6]*V.Z,
-		M.E[8]*V.X + M.E[9]*V.Z + M.E[10]*V.Z,
+		M.E[0]*V.X + M.E[1]*V.Y + M.E[2]*V.Z,
+		M.E[4]*V.X + M.E[5]*V.Y + M.E[6]*V.Z,
+		M.E[8]*V.X + M.E[9]*V.Y + M.E[10]*V.Z,
 	};
 	return R;
 }
 
 // Left is transposed
-static float DualMultMat4(vec3 Left, mat4 Mat, vec3 Right) {
+static float DualMultMat4Vec3(vec3 Left, mat4 Mat, vec3 Right) {
 	vec3 T = {
 		Left.X*Mat.E[0] + Left.Y*Mat.E[4] + Left.Z*Mat.E[8],
 		Left.X*Mat.E[1] + Left.Y*Mat.E[5] + Left.Z*Mat.E[9],
@@ -222,6 +250,186 @@ static mat4 RotationAxisMat4(vec3 Axis, float Scale) {
 	R = AddMat4(R, ScalarMat4(KSquare, 1 - Cos32(Rad)));
 
 	return R;
+}
+
+#if 0
+static float DeterminantMat3(mat3 M) {
+	// NOTE: See https://en.wikipedia.org/wiki/Rule_of_Sarrus
+	// | 0 1 2 | 0 1
+	// | 3 4 5 | 3 4
+	// | 6 7 8 | 6 7
+	float Result =
+		+ M.E[0] * M.E[4] * M.E[8]
+		+ M.E[1] * M.E[5] * M.E[6]
+		+ M.E[2] * M.E[3] * M.E[7]
+		- M.E[2] * M.E[4] * M.E[6]
+		- M.E[0] * M.E[5] * M.E[6]
+		- M.E[1] * M.E[3] * M.E[8]
+	;
+	return Result;
+}
+#endif
+
+static mat4 FromColsMat3AsMat4(vec3 *Cols) {
+	mat4 Result = {
+		Cols[0].E[0], Cols[1].E[0], Cols[2].E[0], 0.0f,
+		Cols[0].E[1], Cols[1].E[1], Cols[2].E[1], 0.0f,
+		Cols[0].E[2], Cols[1].E[2], Cols[2].E[2], 0.0f,
+		0.0f, 0.0f, 0.0f, 0.0f,
+	};
+	return Result;
+}
+
+static float DeterminantMat3OfMat4(mat4 M) {
+	// NOTE: See https://en.wikipedia.org/wiki/Rule_of_Sarrus
+	// |  0  1  2  |  0  1
+	// |  4  5  6  |  4  5
+	// |  8  9 10  |  8  9
+	float Result =
+		+ M.E[0] * M.E[5] * M.E[10]
+		+ M.E[1] * M.E[6] * M.E[8]
+		+ M.E[2] * M.E[4] * M.E[9]
+		- M.E[2] * M.E[5] * M.E[8]
+		- M.E[0] * M.E[6] * M.E[9]
+		- M.E[1] * M.E[4] * M.E[10]
+	;
+	return Result;
+}
+
+// Returns xi that satisfy xxx + Axx + Bx + C = 0 in R else xi = 0
+static vec3 CubicRoots(float A, float B, float C) {
+	
+	// NOTE: See https://en.wikipedia.org/wiki/Cubic_equation
+	
+	// xxx + Axx + Bx + C = 0
+	// D0 := AA - 3B
+	// D1 := 2AAA - 9AB + 27C
+	// Rd := D1*D1 - 4*D0*D0*D0
+	// C := Cbrt((D1 + Sqrt(Rd))/2)
+	
+	vec3 Result;
+	
+	float D0 = A*A - 3*B;
+	float D1 = 2*A*A*A - 9*A*B + 27*C;
+	float Rd = D1*D1 - 4*D0*D0*D0;
+	
+	// NOTE: Compute CCC = (D1 + sqrt(Rd)) / 2;
+	float CReal, CImag;
+	if(Rd < 0.0f) {
+		CReal = 0.5f*D1;
+		CImag = 0.5f*Sqrt32(-Rd);
+	} else {
+		CReal = 0.5f*(D1 + Sqrt32(Rd));
+		CImag = 0.0f;
+	}
+	
+	// NOTE: Compute C = cbrt(CCC)
+	// using pow(z, 1/n) = pow(r, 1/n)(cos(phi/n)+isin(phi/n))
+	float Phi = Atan232(CImag, CReal);
+	float R = Sqrt32(CReal*CReal + CImag*CImag);
+	R = Cbrt32(R);
+	CReal = R * Cos32(Phi/3);
+	CImag = R * Sin32(Phi/3);
+	
+	// NOTE: xk = -1/3a(b + Pow(Xi, k)*C + D0/(Pow(Xi, k)*C)), k in {0, 1, 2} and Xi = -0.5 + Sqrt(-3/4)
+	
+	float XiReal = -0.5f;
+	float XiImag = Sqrt32(0.75f);
+	// NOTE: (a + bi)(a + bi) = (aa - bb) + (2ab)i
+	float XiPowReal[] = { 1.0f, XiReal, XiReal*XiReal - XiImag*XiImag };
+	float XiPowImag[] = { 0.0f, XiImag, 2*XiReal*XiImag };
+	for(int I = 0; I < 3; ++I) {
+		
+		// NOTE: Multiply XiPow and C using
+		// (a + bi)(c + di) = (ac - bd) + (ad + bc)i
+		float XiPowCReal = XiPowReal[I]*CReal - XiPowImag[I]*CImag;
+		float XiPowCImag = XiPowImag[I]*CReal + CImag*XiPowReal[I];
+		
+		// NOTE: Invert XiPowC using
+		// 1/(a + bi) = (a/(aa + bb)) - (b/(aa + bb))i
+		float LenSq = XiPowCReal*XiPowCReal + XiPowCImag*XiPowCImag;
+		float InvXiPowCReal = XiPowCReal/LenSq;
+		float InvXiPowCImag = -XiPowCImag/LenSq;
+		
+		float ResultImag = XiPowCImag + D0 * InvXiPowCImag;
+		float Epsilon = 0.0000001f;
+		if(ResultImag*ResultImag < Epsilon) {
+			Result.E[I] = (A + XiPowCReal + D0 * InvXiPowCReal)/-3.0f;
+		}
+		else {
+			Result.E[I] = 0.0f;
+		}
+	}
+	
+	return Result;
+}
+
+static vec3 EigenvaluesMat3OfMat4(mat4 M) {
+	/*
+		| a-λ   b   c  |
+	det |  d   e-λ  f  | = 0
+		|  g    h  i-λ |
+	<=>
+	+(a-λ)(e-λ)(i-λ) +bfg +cdh -c(e-λ)g -(a-λ)fh -bd(i-λ) = 0
+	<=>
+	λλλ + (-a-e-i)λλ + (+ae+ei+ai-cg-fn-bd)λ + (+ceg+afn+bdi-aei-bfg-cdh) = 0
+	<=> (A := -a-e-i, B := +ae+ei+ai-cg-fn-bd, C := +ceg+afn+bdi-aei-bfg-cdh)
+	λλλ + Aλλ + Bλ + C = 0
+	*/
+	
+	float
+		a = M.E[0],
+		b = M.E[1],
+		c = M.E[2],
+		d = M.E[4],
+		e = M.E[5],
+		f = M.E[6],
+		g = M.E[8],
+		h = M.E[9],
+		i = M.E[10]
+	;
+	
+	float A = -a-e-i;
+	float B = +a*e+e*i+a*i-c*g-f*h-b*d;
+	float C = +c*e*g+a*f*h+b*d*i-a*e*i-b*f*g-c*d*h;
+	
+	vec3 Result = CubicRoots(A, B, C);
+	return Result;
+}
+
+static mat4 EigenvectorsMat3OfMat4(mat4 M) {
+	// Solve (M - λE)v = 0 for each λ
+	
+	vec3 Eigenvalues = EigenvaluesMat3OfMat4(M);
+	
+	vec3 Results[3] = {0};
+	for(int I = 0; I < 3; ++I) {
+		
+		float Lamdba = Eigenvalues.E[I];
+		if(Lamdba == 0.0f) {
+			continue;
+		} 
+		
+		vec3 Rows[] = {
+			{ M.E[0] - Lamdba, M.E[1], M.E[2] },
+			{ M.E[4], M.E[5] - Lamdba, M.E[6] },
+			{ M.E[8], M.E[9], M.E[10] - Lamdba }
+		};
+		
+		float Epsilon = 0.0000001f;
+		vec3 C;
+		int Indices[] = {0, 1, 0, 2, 1, 2};
+		for(int J = 0; J < 3; ++J) {
+			C = CrossVec3(Rows[Indices[2*J]], Rows[Indices[2*J+1]]);
+			if(DotVec3(C, C) >= Epsilon) {
+				Results[I] = C;
+				break;
+			}
+		}
+	}
+	
+	mat4 Result = FromColsMat3AsMat4(Results);
+	return Result;
 }
 
 static mat4 RotationXMat4(float Rad) {
