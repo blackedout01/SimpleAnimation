@@ -160,7 +160,7 @@ static mesh LoadOBJ(const char *Path) {
 		}
 		++Index;
 	}
-	breakOuterLoop:
+	breakOuterLoop:;
 	
 	float *AttribV = malloc(3 * CountV * sizeof(float));
 	int IndexV = 0;
