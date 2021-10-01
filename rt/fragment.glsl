@@ -1,4 +1,4 @@
-#version 330
+#version 420
 
 out vec4 OutColor;
 
@@ -31,67 +31,117 @@ float RaySphereIntersection(vec3 Base, vec3 Dir, vec3 Mid, float RadiusSquare) {
 }
 
 #define MaxSphereCount (3)
-vec4 Spheres[MaxSphereCount];
-vec4 Colors[MaxSphereCount];
+float EarthRadius = 100;
+vec4 Spheres[MaxSphereCount] = {
+	vec4(1, 0, 0, 0.2f),
+	vec4(0, 1, 0, 0.2f),
+	vec4(0, -EarthRadius, 0, EarthRadius*EarthRadius),
+};
+vec4 Colors[MaxSphereCount] = {
+	vec4(0, 0, 1, 1),
+	vec4(1, 1, 0, 1),
+	vec4(1, 0.5, 1, 1),
+};
+float Roughness[MaxSphereCount] = {
+	1.0,
+	1.0,
+	0.0,
+};
+int seed = 0x54948649;
 
+int Rand() {
+	/* Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs" */
+	seed = seed ^ (seed << 13) ^ (seed >> 17) ^ (seed << 5);
+	return seed;
+}
+
+float RandFloat() {
+	return (Rand() & 65535)/65535.0;
+}
+
+struct hit {
+	float S;
+	int Index;
+};
+
+hit ComputeClosestHit(vec3 Base, vec3 Dir, int ExcludedIndex) {
+	hit Hit;
+	Hit.S = 10000000.0;
+	Hit.Index = -1;
+	for(int I = 0; I < MaxSphereCount; I++) {
+		if(I == ExcludedIndex) continue;
+		float NewS = RaySphereIntersection(Base, Dir, Spheres[I].xyz, Spheres[I].w);
+		if(NewS > 0.0f && NewS < Hit.S) {
+			Hit.Index = I;
+			Hit.S = NewS;
+		}
+	}
+	return Hit;
+}
+
+bool IsAnyHit(vec3 Base, vec3 Dir, int ExcludedIndex) {
+	for(int I = 0; I < MaxSphereCount; I++) {
+		if(I == ExcludedIndex) continue;
+		float S = RaySphereIntersection(Base, Dir, Spheres[I].xyz, Spheres[I].w);
+		if(S > 0) {
+			return true;
+		}
+	}
+	return false;
+}
+
+uniform int UniformSeed;
 void main() {
+	seed = floatBitsToInt(CornerPosition.x);
+	Rand();
+	seed ^= floatBitsToInt(CornerPosition.y);
+	Rand();
+	seed ^= floatBitsToInt(CornerPosition.z);
+	Rand();
+	seed ^= floatBitsToInt(CameraPosition.x);
+	Rand();
+	seed ^= floatBitsToInt(CameraPosition.y);
+	Rand();
+	seed ^= floatBitsToInt(CameraPosition.z);
+	Rand();
+	//seed = UniformSeed;
+	// Objekt
+	// Color
+	// Roughness, NIXRefraction
 
 	vec3 InvLightDir = vec3(0.0f, 1.0f, 0.0f);
 
-	Spheres[0] = vec4(1, 0, 0, 0.2f);
-	Colors[0] = vec4(0, 0, 1, 1);
-	Spheres[1] = vec4(0, 1, 0, 0.2f);
-	Colors[1] = vec4(1, 1, 0, 1);
-	float EarthRadius = 100;
-	Spheres[2] = vec4(0, -EarthRadius, 0, EarthRadius*EarthRadius);
-	Colors[2] = vec4(1, 1, 0, 1);
-	float Depth = 1000000000.0;
-	int HitIndex = -1;
-	for(int I = 0; I < MaxSphereCount; I++) {
-		float NewDepth = RaySphereIntersection(CameraPosition, CornerPosition, Spheres[I].xyz, Spheres[I].w);
-		if(NewDepth > 0 && NewDepth < Depth) {
-			HitIndex = I;
-			Depth = NewDepth;
-		}
-	}
+	hit FirstHit = ComputeClosestHit(CameraPosition, CornerPosition, -1);
 	
-	if(HitIndex >= 0) {
-		vec3 Point = CameraPosition + Depth*CornerPosition;
-		vec3 Normal = normalize(Point - Spheres[HitIndex].xyz);
-		float LightIntensity = dot(InvLightDir, Normal);
-		
-		for(int I = 0; I < MaxSphereCount; I++) {
-			float Depth = RaySphereIntersection(Point, InvLightDir, Spheres[I].xyz, Spheres[I].w);
-			if(Depth > 0) {
-				LightIntensity = 0;
-				break;
+	if(FirstHit.Index >= 0) {
+		vec3 Point = CameraPosition + FirstHit.S*CornerPosition;
+		vec3 Normal = normalize(Point - Spheres[FirstHit.Index].xyz);
+		vec3 Reflection = normalize(reflect(normalize(CornerPosition), Normal));
+		vec4 LightColor = vec4(0, 0, 0, 0);//Colors[FirstHit.Index];
+		#define RayCount (100)
+		for(int I = 0; I < RayCount; ++I) {
+			vec3 Dir = Reflection + Roughness[FirstHit.Index]*normalize(vec3(RandFloat() - 0.5, RandFloat() - 0.5, RandFloat() - 0.5));
+			hit Hit = ComputeClosestHit(Point, Dir, FirstHit.Index);
+			if(Hit.Index != -1) {
+//				LightColor += (1 / RayCount) * pow(Colors[Hit.Index], vec4(1.0/RayCount));
+				vec3 Point2 = Point + Hit.S*Dir;
+				//if(!IsAnyHit(Point2, InvLightDir, Hit.Index)) {
+					LightColor += Colors[Hit.Index]*max(0.1, dot(normalize(Point2 - Spheres[Hit.Index].xyz), Dir));
+				//}
+			} else {
+				LightColor += vec4(vec3(1)*dot(Dir, InvLightDir), 1);
 			}
 		}
-		OutColor = Colors[HitIndex]*max(0.1, LightIntensity);
+		LightColor *= Colors[FirstHit.Index]/RayCount;
+
+		//if(IsAnyHit(Point, InvLightDir)) {
+			//LightIntensity = 0;
+		//}
+		//OutColor = Colors[FirstHit.Index]*max(vec4(0.1, 0.1, 0.1, 1), LightColor);
+		OutColor = LightColor;
 	} else {
 		OutColor = vec4(1, 1, 1, 1);
 	}
-	/*if(RaySphereIntersection(CameraPosition, CornerPosition, vec3(1, 0, 0), 0.2f)) {
-		OutColor = vec4(1, 0, 0, 1);
-	}
-	if(RaySphereIntersection(CameraPosition, CornerPosition, vec3(1, 1, 0), 0.2f)) {
-		OutColor = vec4(1, 0, 1, 1);
-	}
-	if(RaySphereIntersection(CameraPosition, CornerPosition, vec3(1, 0, 1), 0.2f)) {
-		OutColor = vec4(0, 1, 0, 1);
-	}
-	if(RaySphereIntersection(CameraPosition, CornerPosition, vec3(0, 1, 0), 0.2f)) {
-		OutColor = vec4(0, 0, 1, 1);
-	}
-	if(RaySphereIntersection(CameraPosition, CornerPosition, vec3(0, 0, 1), 0.2f)) {
-		OutColor = vec4(1, 1, 0, 1);
-	}
-	if(RaySphereIntersection(CameraPosition, CornerPosition, vec3(0, 1, 1), 0.2f)) {
-		OutColor = vec4(0, 1, 1, 1);
-	}*/
-
-	//OutColor = vec4(vec3(RaySphereIntersection(CameraPosition, CornerPosition, vec3(1, 0, 0), 0.2f)), 1);
-	
 }
 
 #if 0
