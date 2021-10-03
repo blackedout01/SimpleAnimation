@@ -120,8 +120,8 @@ static float Zoom = 6.0f;
 
 
 void Draw(context *Context) {
-	if(Context->DeltaTime > 0.05f)
-		return;
+	//if(Context->DeltaTime > 0.05f)
+	//	return;
 	
 	float Aspect = Context->Width/(float)Context->Height;
 	
@@ -156,8 +156,6 @@ void Draw(context *Context) {
 	
 	glBindVertexArray(ScreenVAO);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-	
-
 	
 
 #if 0
