@@ -30,24 +30,238 @@ float RaySphereIntersection(vec3 Base, vec3 Dir, vec3 Mid, float RadiusSquare) {
 	return SMin;
 }
 
-#define MaxSphereCount (3)
+// NOTE: Dir is assumed to be normalized.
+float RayNormSphereIntersection(vec3 Base, vec3 Dir, vec3 Mid, float RadiusSquare) {
+	vec3 BaseMinusMid = Base - Mid;
+	float P = dot(Dir, BaseMinusMid);
+	float Q = (dot(BaseMinusMid, BaseMinusMid) - RadiusSquare);
+
+	float R = P*P - Q;
+	if(R < 0) return -1.0;
+	float SMin = -P - sqrt(R);
+	
+	return SMin;
+}
+
+#define MaxSphereCount (100)
 float EarthRadius = 100;
 vec4 Spheres[MaxSphereCount] = {
 	vec4(1, 0, 0, 0.2f),
 	vec4(0, 1, 0, 0.2f),
+	vec4(1, 0, 0, 0.2f),
+	vec4(0, 1, 0, 0.2f),
+	vec4(1, 1, 0, 0.1f),
+	vec4(0.5, 1, 0, 0.2f),
+	vec4(0.5, 1, 5, 0.1f),
+	vec4(0.5, 1.5, 0.5, 0.3f),
+	vec4(0, 1, 1, 0.12f),
+	vec4(0, -EarthRadius, 0, EarthRadius*EarthRadius),
+	vec4(1, 0, 0, 0.2f),
+	vec4(0, 1, 0, 0.2f),
+	vec4(1, 0, 0, 0.2f),
+	vec4(0, 1, 0, 0.2f),
+	vec4(1, 1, 0, 0.1f),
+	vec4(0.5, 1, 0, 0.2f),
+	vec4(0.5, 1, 5, 0.1f),
+	vec4(0.5, 1.5, 0.5, 0.3f),
+	vec4(0, 1, 1, 0.12f),
+	vec4(0, -EarthRadius, 0, EarthRadius*EarthRadius),
+	vec4(1, 0, 0, 0.2f),
+	vec4(0, 1, 0, 0.2f),
+	vec4(1, 0, 0, 0.2f),
+	vec4(0, 1, 0, 0.2f),
+	vec4(1, 1, 0, 0.1f),
+	vec4(0.5, 1, 0, 0.2f),
+	vec4(0.5, 1, 5, 0.1f),
+	vec4(0.5, 1.5, 0.5, 0.3f),
+	vec4(0, 1, 1, 0.12f),
+	vec4(0, -EarthRadius, 0, EarthRadius*EarthRadius),
+	vec4(1, 0, 0, 0.2f),
+	vec4(0, 1, 0, 0.2f),
+	vec4(1, 0, 0, 0.2f),
+	vec4(0, 1, 0, 0.2f),
+	vec4(1, 1, 0, 0.1f),
+	vec4(0.5, 1, 0, 0.2f),
+	vec4(0.5, 1, 5, 0.1f),
+	vec4(0.5, 1.5, 0.5, 0.3f),
+	vec4(0, 1, 1, 0.12f),
+	vec4(0, -EarthRadius, 0, EarthRadius*EarthRadius),
+	vec4(1, 0, 0, 0.2f),
+	vec4(0, 1, 0, 0.2f),
+	vec4(1, 0, 0, 0.2f),
+	vec4(0, 1, 0, 0.2f),
+	vec4(1, 1, 0, 0.1f),
+	vec4(0.5, 1, 0, 0.2f),
+	vec4(0.5, 1, 5, 0.1f),
+	vec4(0.5, 1.5, 0.5, 0.3f),
+	vec4(0, 1, 1, 0.12f),
+	vec4(0, -EarthRadius, 0, EarthRadius*EarthRadius),
+	vec4(1, 0, 0, 0.2f),
+	vec4(0, 1, 0, 0.2f),
+	vec4(1, 0, 0, 0.2f),
+	vec4(0, 1, 0, 0.2f),
+	vec4(1, 1, 0, 0.1f),
+	vec4(0.5, 1, 0, 0.2f),
+	vec4(0.5, 1, 5, 0.1f),
+	vec4(0.5, 1.5, 0.5, 0.3f),
+	vec4(0, 1, 1, 0.12f),
+	vec4(0, -EarthRadius, 0, EarthRadius*EarthRadius),
+	vec4(1, 0, 0, 0.2f),
+	vec4(0, 1, 0, 0.2f),
+	vec4(1, 0, 0, 0.2f),
+	vec4(0, 1, 0, 0.2f),
+	vec4(1, 1, 0, 0.1f),
+	vec4(0.5, 1, 0, 0.2f),
+	vec4(0.5, 1, 5, 0.1f),
+	vec4(0.5, 1.5, 0.5, 0.3f),
+	vec4(0, 1, 1, 0.12f),
+	vec4(0, -EarthRadius, 0, EarthRadius*EarthRadius),
+	vec4(1, 0, 0, 0.2f),
+	vec4(0, 1, 0, 0.2f),
+	vec4(1, 0, 0, 0.2f),
+	vec4(0, 1, 0, 0.2f),
+	vec4(1, 1, 0, 0.1f),
+	vec4(0.5, 1, 0, 0.2f),
+	vec4(0.5, 1, 5, 0.1f),
+	vec4(0.5, 1.5, 0.5, 0.3f),
+	vec4(0, 1, 1, 0.12f),
+	vec4(0, -EarthRadius, 0, EarthRadius*EarthRadius),
+	vec4(1, 0, 0, 0.2f),
+	vec4(0, 1, 0, 0.2f),
+	vec4(1, 0, 0, 0.2f),
+	vec4(0, 1, 0, 0.2f),
+	vec4(1, 1, 0, 0.1f),
+	vec4(0.5, 1, 0, 0.2f),
+	vec4(0.5, 1, 5, 0.1f),
+	vec4(0.5, 1.5, 0.5, 0.3f),
+	vec4(0, 1, 1, 0.12f),
+	vec4(0, -EarthRadius, 0, EarthRadius*EarthRadius),
+	vec4(1, 0, 0, 0.2f),
+	vec4(0, 1, 0, 0.2f),
+	vec4(1, 0, 0, 0.2f),
+	vec4(0, 1, 0, 0.2f),
+	vec4(1, 1, 0, 0.1f),
+	vec4(0.5, 1, 0, 0.2f),
+	vec4(0.5, 1, 5, 0.1f),
+	vec4(0.5, 1.5, 0.5, 0.3f),
+	vec4(0, 1, 1, 0.12f),
 	vec4(0, -EarthRadius, 0, EarthRadius*EarthRadius),
 };
 vec4 Colors[MaxSphereCount] = {
-	vec4(0, 0, 1, 1),
-	vec4(1, 1, 0, 1),
-	vec4(1, 0.5, 1, 1),
+	vec4(0.8, 0.8, 1, 1),
+	vec4(1, 1, 0.8, 1),
+	vec4(1, 0.85, 1, 1),
+	vec4(0.8, 1, 0.85, 1),
+	vec4(1, 0.8, 1, 1),
+	vec4(1, 1, 1, 1),
+	vec4(0.8, 0.8, 0.8, 1),
+	vec4(0.8, 1, 0.8, 1),
+	vec4(0.8, 0.8, 0.8, 1),
+	vec4(0.8, 1, 0.8, 1),
+	vec4(0.8, 0.8, 1, 1),
+	vec4(1, 1, 0.8, 1),
+	vec4(1, 0.85, 1, 1),
+	vec4(0.8, 1, 0.85, 1),
+	vec4(1, 0.8, 1, 1),
+	vec4(1, 1, 1, 1),
+	vec4(0.8, 0.8, 0.8, 1),
+	vec4(0.8, 1, 0.8, 1),
+	vec4(0.8, 0.8, 0.8, 1),
+	vec4(0.8, 1, 0.8, 1),
+	vec4(0.8, 0.8, 1, 1),
+	vec4(1, 1, 0.8, 1),
+	vec4(1, 0.85, 1, 1),
+	vec4(0.8, 1, 0.85, 1),
+	vec4(1, 0.8, 1, 1),
+	vec4(1, 1, 1, 1),
+	vec4(0.8, 0.8, 0.8, 1),
+	vec4(0.8, 1, 0.8, 1),
+	vec4(0.8, 0.8, 0.8, 1),
+	vec4(0.8, 1, 0.8, 1),
+	vec4(0.8, 0.8, 1, 1),
+	vec4(1, 1, 0.8, 1),
+	vec4(1, 0.85, 1, 1),
+	vec4(0.8, 1, 0.85, 1),
+	vec4(1, 0.8, 1, 1),
+	vec4(1, 1, 1, 1),
+	vec4(0.8, 0.8, 0.8, 1),
+	vec4(0.8, 1, 0.8, 1),
+	vec4(0.8, 0.8, 0.8, 1),
+	vec4(0.8, 1, 0.8, 1),
+	vec4(0.8, 0.8, 1, 1),
+	vec4(1, 1, 0.8, 1),
+	vec4(1, 0.85, 1, 1),
+	vec4(0.8, 1, 0.85, 1),
+	vec4(1, 0.8, 1, 1),
+	vec4(1, 1, 1, 1),
+	vec4(0.8, 0.8, 0.8, 1),
+	vec4(0.8, 1, 0.8, 1),
+	vec4(0.8, 0.8, 0.8, 1),
+	vec4(0.8, 1, 0.8, 1),
+	vec4(0.8, 0.8, 1, 1),
+	vec4(1, 1, 0.8, 1),
+	vec4(1, 0.85, 1, 1),
+	vec4(0.8, 1, 0.85, 1),
+	vec4(1, 0.8, 1, 1),
+	vec4(1, 1, 1, 1),
+	vec4(0.8, 0.8, 0.8, 1),
+	vec4(0.8, 1, 0.8, 1),
+	vec4(0.8, 0.8, 0.8, 1),
+	vec4(0.8, 1, 0.8, 1),
+	vec4(0.8, 0.8, 1, 1),
+	vec4(1, 1, 0.8, 1),
+	vec4(1, 0.85, 1, 1),
+	vec4(0.8, 1, 0.85, 1),
+	vec4(1, 0.8, 1, 1),
+	vec4(1, 1, 1, 1),
+	vec4(0.8, 0.8, 0.8, 1),
+	vec4(0.8, 1, 0.8, 1),
+	vec4(0.8, 0.8, 0.8, 1),
+	vec4(0.8, 1, 0.8, 1),
+	vec4(0.8, 0.8, 1, 1),
+	vec4(1, 1, 0.8, 1),
+	vec4(1, 0.85, 1, 1),
+	vec4(0.8, 1, 0.85, 1),
+	vec4(1, 0.8, 1, 1),
+	vec4(1, 1, 1, 1),
+	vec4(0.8, 0.8, 0.8, 1),
+	vec4(0.8, 1, 0.8, 1),
+	vec4(0.8, 0.8, 0.8, 1),
+	vec4(0.8, 1, 0.8, 1),
+	vec4(0.8, 0.8, 1, 1),
+	vec4(1, 1, 0.8, 1),
+	vec4(1, 0.85, 1, 1),
+	vec4(0.8, 1, 0.85, 1),
+	vec4(1, 0.8, 1, 1),
+	vec4(1, 1, 1, 1),
+	vec4(0.8, 0.8, 0.8, 1),
+	vec4(0.8, 1, 0.8, 1),
+	vec4(0.8, 0.8, 0.8, 1),
+	vec4(0.8, 1, 0.8, 1),
+	vec4(0.8, 0.8, 1, 1),
+	vec4(1, 1, 0.8, 1),
+	vec4(1, 0.85, 1, 1),
+	vec4(0.8, 1, 0.85, 1),
+	vec4(1, 0.8, 1, 1),
+	vec4(1, 1, 1, 1),
+	vec4(0.8, 0.8, 0.8, 1),
+	vec4(0.8, 1, 0.8, 1),
+	vec4(0.8, 0.8, 0.8, 1),
+	vec4(0.8, 1, 0.8, 1),
 };
-float Roughness[MaxSphereCount] = {
-	1.0,
-	1.0,
-	0.0,
-};
+// roughness, refractive index
+/*vec4 Attribs[MaxSphereCount] = {
+	vec4(1, 1.3325, 0, 0),
+	vec4(1, 1, 0, 0),
+	vec4(1, 1, 0, 0),
+	vec4(1, 1, 0, 0),
+	vec4(1, 1, 0, 0),
+	vec4(1, 1, 0, 0),
+	vec4(1, 1, 0, 0),
+	vec4(1, 1, 0, 0),
+};*/
 int seed = 0x54948649;
+vec3 InvLightDir = vec3(0.0f, 1.0f, 0.0f);
 
 int Rand() {
 	/* Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs" */
@@ -79,6 +293,22 @@ hit ComputeClosestHit(vec3 Base, vec3 Dir, int ExcludedIndex) {
 	return Hit;
 }
 
+// NOTE: Dir is assumed to be normalized.
+hit ComputeClosestHitNorm(vec3 Base, vec3 Dir, int ExcludedIndex) {
+	hit Hit;
+	Hit.S = 10000000.0;
+	Hit.Index = -1;
+	for(int I = 0; I < MaxSphereCount; I++) {
+		if(I == ExcludedIndex) continue;
+		float NewS = RayNormSphereIntersection(Base, Dir, Spheres[I].xyz, Spheres[I].w);
+		if(NewS > 0.0f && NewS < Hit.S) {
+			Hit.Index = I;
+			Hit.S = NewS;
+		}
+	}
+	return Hit;
+}
+
 bool IsAnyHit(vec3 Base, vec3 Dir, int ExcludedIndex) {
 	for(int I = 0; I < MaxSphereCount; I++) {
 		if(I == ExcludedIndex) continue;
@@ -90,9 +320,37 @@ bool IsAnyHit(vec3 Base, vec3 Dir, int ExcludedIndex) {
 	return false;
 }
 
+// NOTE: Dir is assumed to be normalized.
+vec4 ComputeColor(vec3 Base, vec3 Dir, int ExcludedIndex, int Depth) {
+	vec4 Ret = vec4(1);
+	
+	for(int I = 0; I < Depth; I++) {
+		hit Hit = ComputeClosestHitNorm(Base, Dir, ExcludedIndex);
+		if(Hit.Index >= 0) {
+			
+			vec3 Point = Base + Hit.S*Dir;
+			vec3 Normal = normalize(Point - Spheres[Hit.Index].xyz);
+			vec3 Reflection = reflect(Dir, Normal);
+			//vec3 Refraction = refract(Dir, Normal, Attribs[Hit.Index]);
+			//vec3 NewDir = Reflection + Roughness[Hit.Index]*normalize(vec3(RandFloat() - 0.5, RandFloat() - 0.5, RandFloat() - 0.5))
+			//vec4 Result = ComputeColor(Point, Reflection, Hit.Index, Depth - 1);
+			Ret *= Colors[Hit.Index];
+			Base = Point;
+			Dir = Reflection;
+			ExcludedIndex = Hit.Index;
+		} else {
+			if(I != 0)  {
+				Ret *= vec4(vec3(1)*max(0, dot(Dir, InvLightDir)), 1);
+			}
+			break;
+		}
+	}
+	return Ret;
+}
+
 uniform int UniformSeed;
 void main() {
-	seed = floatBitsToInt(CornerPosition.x);
+	/*seed = floatBitsToInt(CornerPosition.x);
 	Rand();
 	seed ^= floatBitsToInt(CornerPosition.y);
 	Rand();
@@ -103,14 +361,17 @@ void main() {
 	seed ^= floatBitsToInt(CameraPosition.y);
 	Rand();
 	seed ^= floatBitsToInt(CameraPosition.z);
-	Rand();
+	Rand();*/
+	for(int I = 0; I < MaxSphereCount; I++) {
+		Colors[I] = vec4(RandFloat(), RandFloat(), RandFloat(), 1);
+		Spheres[I] = vec4(RandFloat()*10 - 5, RandFloat()*10 - 5, RandFloat()*10 - 5, RandFloat()*0.5);
+	}
 	//seed = UniformSeed;
 	// Objekt
 	// Color
 	// Roughness, NIXRefraction
 
-	vec3 InvLightDir = vec3(0.0f, 1.0f, 0.0f);
-
+	#if 0
 	hit FirstHit = ComputeClosestHit(CameraPosition, CornerPosition, -1);
 	
 	if(FirstHit.Index >= 0) {
@@ -142,6 +403,9 @@ void main() {
 	} else {
 		OutColor = vec4(1, 1, 1, 1);
 	}
+	#endif
+	vec3 RayDir = normalize(CornerPosition);
+	OutColor = ComputeColor(CameraPosition, RayDir, -1, 1000);
 }
 
 #if 0
