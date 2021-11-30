@@ -38,6 +38,8 @@ static PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
 static PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
 static PFNGLUNIFORM4FVPROC glUniform4fv;
 static PFNGLUNIFORM1IPROC glUniform1i;
+static PFNGLUNIFORM1FPROC glUniform1f;
+static PFNGLUNIFORM3FVPROC glUniform3fv;
 static PFNGLMAPBUFFERPROC glMapBuffer;
 static PFNGLUNMAPBUFFERPROC glUnmapBuffer;
 
@@ -210,6 +212,8 @@ INT WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, INT ShowC
 	glDebugMessageCallback = (PFNGLDEBUGMESSAGECALLBACKPROC)wglGetProcAddress("glDebugMessageCallback");
 	glUniform4fv = (PFNGLUNIFORM4FVPROC)wglGetProcAddress("glUniform4fv");
 	glUniform1i = (PFNGLUNIFORM1IPROC)wglGetProcAddress("glUniform1i");
+	glUniform1f = (PFNGLUNIFORM1FPROC)wglGetProcAddress("glUniform1f");
+	glUniform3fv = (PFNGLUNIFORM3FVPROC)wglGetProcAddress("glUniform3fv");
 	glMapBuffer = (PFNGLMAPBUFFERPROC)wglGetProcAddress("glMapBuffer");
 	glUnmapBuffer = (PFNGLUNMAPBUFFERPROC)wglGetProcAddress("glUnmapBuffer");
 
